@@ -1,43 +1,24 @@
-import { Component, OnInit, PLATFORM_ID, Inject ,AfterViewInit} from '@angular/core';
+import { Component, OnInit, AfterViewInit, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 declare let L: any;
-// import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
-export class MapComponent implements OnInit ,AfterViewInit{
-
+export class MapComponent implements OnInit, AfterViewInit {
   private map: any;
-  private centroid: L.LatLngExpression = [16.81897, 10.16579]; // Example centroid coordinates
+  private centroid: L.LatLngExpression = [16.81897, 10.16579]; 
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
-  private initMaps(): void {
-    this.map = L.map('map', {
-      center: [ 39.8282, -98.5795 ],
-      zoom: 3
-    });
 
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      minZoom: 3,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</acd >'
-    });
-
-    const osmhot = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      minZoom: 3,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-    osm.addTo(this.map);
-    // osmhot.addTo(this.map);
-    this.map.flyTo([13.7506, 100.7943], 8)
+  
+  ngOnInit(): void {
   }
 
-  ngOnInit(): void {
+  ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       import('leaflet').then((module) => {
         const L = module.default;
@@ -47,16 +28,9 @@ export class MapComponent implements OnInit ,AfterViewInit{
       });
     }
   }
-  ngAfterViewInit(): void {
-  }
-  private initMap(L: any): void {
-    this.map = L.map('map', {
-      center:[13.7506, 100.7943],
-      zoom: 12,
-    });
 
-    // Add any other Leaflet configurations or layers here
-    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  private initMap(L: any): void {
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       minZoom: 3,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -66,8 +40,30 @@ export class MapComponent implements OnInit ,AfterViewInit{
       minZoom: 3,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
-
-    tiles.addTo(this.map);
-    osmhot.addTo(this.map);
+    const osmtopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      minZoom: 3,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+  
+    this.map = L.map('map', {
+      center: [13.7506, 100.7943],
+      zoom: 12,
+      layers: [osm, osmhot]
+    });
+  
+    var baseMaps = {
+      "OpenStreetMap": osm,
+      "OpenStreetMap.HOT": osmhot
+    };
+    var layerControl = L.control.layers(baseMaps).addTo(this.map);
+    layerControl.addBaseLayer(osmtopo, "OpenTopoMap");
+  
+    this.map.on('click', (event: any) => {
+      const latitude = event.latlng.lat;
+      const longitude = event.latlng.lng;
+      console.log('Latitude:', latitude, 'Longitude:', longitude);
+    });
   }
+  
 }
